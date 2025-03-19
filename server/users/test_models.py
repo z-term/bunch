@@ -2,7 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
 
-from users.models import User
+from users.models import ColorChoices, ThemePreferenceChoices, User
 
 
 class CustomUserTest(TestCase):
@@ -37,7 +37,19 @@ class CustomUserTest(TestCase):
         with self.assertRaises(ValidationError, msg="Email is required."):
             User.objects.create_user(username="test", password="testpassword")
 
-    def test_has_all_attributes(self):
+    def test_default_theme_preference_is_system(self):
+        user = User.objects.get(email="test@bunch.io")
+        self.assertEqual(user.theme_preference, ThemePreferenceChoices.SYSTEM, "Default theme preference is not system")
+
+    def test_default_color_is_set(self):
+        user = User.objects.get(email="test@bunch.io")
+        self.assertIn(user.color, ColorChoices.values)
+
+    def test_default_color_for_superuser_is_silver(self):
+        user = User.objects.get(email="root@bunch.io")
+        self.assertEqual(user.color, ColorChoices.SILVER.value)
+
+    def test_all_attributes(self):
         user = User.objects.get(email="test@bunch.io")
         self.assertTrue(user.is_active, "User is not active")
         self.assertFalse(user.is_staff, "User is staff")
@@ -53,3 +65,6 @@ class CustomUserTest(TestCase):
         self.assertTrue(hasattr(user, "avatar"), "User does not have avatar attribute")
         self.assertTrue(hasattr(user, "status"), "User does not have status attribute")
         self.assertTrue(hasattr(user, "bio"), "User does not have bio attribute")
+        self.assertTrue(hasattr(user, "theme_preference"), "User does not have theme_preference attribute")
+        self.assertTrue(hasattr(user, "color"), "User does not have color attribute")
+        self.assertTrue(hasattr(user, "pronoun"), "User does not have pronoun attribute")
